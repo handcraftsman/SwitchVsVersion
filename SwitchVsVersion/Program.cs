@@ -51,6 +51,7 @@ namespace SwitchVsVersion
 				if (switcher != null)
 				{
 					switcher.Switch(path, version);
+					return;
 				}
 
 				Console.WriteLine(@"Invalid version '{0}'.  Use {1}, {2}, {3}",
