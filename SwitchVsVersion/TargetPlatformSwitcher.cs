@@ -6,26 +6,19 @@ using System.Xml.Linq;
 
 namespace SwitchVsVersion
 {
-	internal static class TargetPlatformSwitcher
+	internal class TargetPlatformSwitcher : ISwitcher
 	{
-		public static void ModifyAllProjectsUnderThisFolderTo(string path, string targetPlatform)
+		public bool IsMatch(string version)
 		{
-			var projectFilePaths = getProjectFiles(path);
-
-			foreach (var eachProjectFilePath in projectFilePaths)
-			{
-				try
-				{
-					modifyProjectFile(eachProjectFilePath, targetPlatform);
-				}
-				catch (XmlException ex)
-				{
-					Console.WriteLine(@"SKIPPED '{0}' because '{1}'.", eachProjectFilePath, ex.Message);
-				}
-			}
+			return TargetPlatformMapping.Getfor(version) != null;
 		}
 
-		private static IEnumerable<string> getProjectFiles(string path)
+		public void Switch(string path, string version)
+		{
+			ModifyAllProjectsUnderThisFolderTo(path, TargetPlatformMapping.Getfor(version).FileValue);
+		}
+
+		private static IEnumerable<string> GetProjectFiles(string path)
 		{
 			if (StringComparer.Ordinal.Compare(Path.GetExtension(path), @".csproj") == 0)
 			{
@@ -35,7 +28,24 @@ namespace SwitchVsVersion
 			return Disk.GetFiles(path, @"*.csproj");
 		}
 
-		private static void modifyProjectFile(string projectFilePath, string targetPlatform)
+		private static void ModifyAllProjectsUnderThisFolderTo(string path, string targetPlatform)
+		{
+			var projectFilePaths = GetProjectFiles(path);
+
+			foreach (var eachProjectFilePath in projectFilePaths)
+			{
+				try
+				{
+					ModifyProjectFile(eachProjectFilePath, targetPlatform);
+				}
+				catch (XmlException ex)
+				{
+					Console.WriteLine(@"SKIPPED '{0}' because '{1}'.", eachProjectFilePath, ex.Message);
+				}
+			}
+		}
+
+		private static void ModifyProjectFile(string projectFilePath, string targetPlatform)
 		{
 			Console.Write(@"Converting to {0} - {1}... ", targetPlatform, projectFilePath);
 

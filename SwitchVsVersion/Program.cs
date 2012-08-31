@@ -1,22 +1,35 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace SwitchVsVersion
 {
-	internal class Program
+	public class Program
 	{
-		private static void Main(string[] args)
+		public static void Main(string[] args)
 		{
+			var supportedVisualStudioVersions = ProjectSolutionMapping.GetAll()
+				.Select(x => x.TargetVersion)
+				.ToHashSet();
+			var supportedFrameworkVersions = FrameworkMapping.GetAll()
+				.Select(x => x.CommandLineArg)
+				.OrderBy(x => x)
+				.ToArray();
+			var supportedTargetPlatformVersions = TargetPlatformMapping.GetAll()
+				.Select(x => x.CommandLineArg)
+				.OrderBy(x => x)
+				.ToArray();
+
 			try
 			{
 				if (args.Length == 0)
 				{
-					Console.WriteLine(@"usage: SwitchVsVersion [folder] [x86|AnyCPU|2010|2008|3.5Framework|4.0Framework]");
+					Console.WriteLine(@"usage: SwitchVsVersion [folder] [{0}|{1}|{2}]",
+					                  String.Join("|", supportedVisualStudioVersions.OrderBy(x => x).ToArray()),
+					                  String.Join("|", supportedFrameworkVersions),
+					                  String.Join("|", supportedTargetPlatformVersions)
+						);
 					return;
 				}
-
-				var comparer = StringComparer.InvariantCultureIgnoreCase;
 
 				string path;
 				string version;
@@ -32,49 +45,20 @@ namespace SwitchVsVersion
 					version = args[1];
 				}
 
-				if (comparer.Compare(version, "3.5Framework") == 0)
+				var switcher = new ISwitcher[] { new FrameworkSwitcher(), new TargetPlatformSwitcher(), new ProjectAndSolutionSwitcher() }
+					.FirstOrDefault(x => x.IsMatch(version));
+
+				if (switcher != null)
 				{
-					FrameworkSwitcher.ModifyAllProjectsUnderThisFolderTo(path, @"3.5");
-					return;
+					switcher.Switch(path, version);
 				}
 
-				if (comparer.Compare(version, "x86") == 0)
-				{
-					TargetPlatformSwitcher.ModifyAllProjectsUnderThisFolderTo(path, @"x86");
-					return;
-				}
-
-				if (comparer.Compare(version, "AnyCPU") == 0)
-				{
-					TargetPlatformSwitcher.ModifyAllProjectsUnderThisFolderTo(path, @"AnyCPU");
-					return;
-				}
-
-				if (comparer.Compare(version, "4.0Framework") == 0)
-				{
-					FrameworkSwitcher.ModifyAllProjectsUnderThisFolderTo(path, @"4.0");
-					return;
-				}
-
-				if (comparer.Compare(version, "2008") == 0)
-				{
-					switchProjectsAndSolutions(
-						path,
-						new ProjectAndSolutionMappings().Select(mapping => mapping.InReverse()));
-
-					return;
-				}
-
-				if (comparer.Compare(version, "2010") == 0)
-				{
-					switchProjectsAndSolutions(
-						path,
-						new ProjectAndSolutionMappings());
-
-					return;
-				}
-
-				Console.WriteLine(@"Invalid version '{0}'.  Use 3.5Framework, 4.0Framework, 2008, or 2010", version);
+				Console.WriteLine(@"Invalid version '{0}'.  Use {1}, {2}, {3}",
+				                  version,
+				                  String.Join(", ", supportedVisualStudioVersions.ToArray()),
+				                  String.Join(", ", supportedFrameworkVersions.ToArray()),
+				                  String.Join(", ", supportedTargetPlatformVersions.ToArray())
+					);
 			}
 			catch (Exception e)
 			{
@@ -83,22 +67,6 @@ namespace SwitchVsVersion
 			finally
 			{
 				Console.WriteLine(@"Finished");
-			}
-		}
-
-		private static void switchProjectsAndSolutions(string path, IEnumerable<Mapping> mappings)
-		{
-			foreach (var wildcard in new[]
-				{
-					@"*.csproj",
-					@"*.sln",
-					@"*.vbproj"
-				})
-			{
-				foreach (var eachFilename in Disk.GetFiles(path, wildcard))
-				{
-					Disk.ModifyFile(eachFilename, mappings);
-				}
 			}
 		}
 	}

@@ -3,18 +3,28 @@ using System.IO;
 
 namespace SwitchVsVersion
 {
-	internal static class FrameworkSwitcher
+	internal class FrameworkSwitcher : ISwitcher
 	{
-		public static void ModifyAllProjectsUnderThisFolderTo(string path, string frameworkVersion)
+		public bool IsMatch(string version)
+		{
+			return FrameworkMapping.Getfor(version) != null;
+		}
+
+		public void Switch(string path, string version)
+		{
+			ModifyAllProjectsUnderThisFolderTo(path, FrameworkMapping.Getfor(version).FileValue);
+		}
+
+		private static void ModifyAllProjectsUnderThisFolderTo(string path, string frameworkVersion)
 		{
 			var projectFilePaths = Disk.GetFiles(path, @"*.csproj");
 			foreach (var eachProjectFilePath in projectFilePaths)
 			{
-				modifyProjectFile(eachProjectFilePath, frameworkVersion);
+				ModifyProjectFile(eachProjectFilePath, frameworkVersion);
 			}
 		}
 
-		private static void modifyProjectFile(string projectFilePath, string frameworkVersion)
+		private static void ModifyProjectFile(string projectFilePath, string frameworkVersion)
 		{
 			Console.Write(@"Converting to {0} - {1}... ", frameworkVersion, projectFilePath);
 

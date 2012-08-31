@@ -8,6 +8,11 @@ namespace SwitchVsVersion
 {
 	internal static class Disk
 	{
+		private static bool AnythingNeedsReplacing(string allText, IEnumerable<ProjectSolutionMapping> mappings)
+		{
+			return mappings.Any(m => allText.Contains(m.OldText));
+		}
+
 		public static IEnumerable<string> GetFiles(string path, string extension)
 		{
 			foreach (var filename in Directory.GetFiles(path, extension))
@@ -22,7 +27,7 @@ namespace SwitchVsVersion
 			}
 		}
 
-		public static void ModifyFile(string pathToFile, IEnumerable<Mapping> mappings)
+		public static void ModifyFile(string pathToFile, IList<ProjectSolutionMapping> mappings)
 		{
 			string allText;
 			Encoding originalEncoding;
@@ -37,7 +42,7 @@ namespace SwitchVsVersion
 				return;
 			}
 
-			if (!anythingNeedsReplacing(allText, mappings))
+			if (!AnythingNeedsReplacing(allText, mappings))
 			{
 				Console.WriteLine(@"nothing to modify in " + pathToFile);
 				return;
@@ -50,11 +55,6 @@ namespace SwitchVsVersion
 				(current, eachMapping) => current.Replace(eachMapping.OldText, eachMapping.NewText));
 
 			File.WriteAllText(pathToFile, allText, originalEncoding);
-		}
-
-		private static bool anythingNeedsReplacing(string allText, IEnumerable<Mapping> mappings)
-		{
-			return mappings.Any(m => allText.Contains(m.OldText));
 		}
 	}
 }
