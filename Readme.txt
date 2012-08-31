@@ -5,3 +5,8 @@ A command-line tool to modify Visual Studio projects.  You can use to change the
 http://stevedunns.blogspot.com/2010/02/tool-to-switch-project-files-between.html
 
 Released by Steve under the WTFPL license: http://sam.zoy.org/wtfpl/COPYING
+
+## Getting an Executable
+
+Either run configure.bat followed by Build.bat, or
+build it with Visual Studio 2010 or later
