@@ -1,31 +1,28 @@
-﻿using System ;
-
-namespace SwitchVsVersion
+﻿namespace SwitchVsVersion
 {
 	public class Mapping
 	{
-		readonly string _oldText ;
-		readonly string _newText ;
+		private readonly string _newText;
+		private readonly string _oldText;
 
-		public Mapping( string oldText, string newText )
+		public Mapping(string oldText, string newText)
 		{
-			_oldText = oldText ;
-			_newText = newText ;
-		}
-
-		public string OldText
-		{
-			get { return _oldText ; }
+			_oldText = oldText;
+			_newText = newText;
 		}
 
 		public string NewText
 		{
-			get { return _newText ; }
+			get { return _newText; }
+		}
+		public string OldText
+		{
+			get { return _oldText; }
 		}
 
-		public Mapping InReverse( )
+		public Mapping InReverse()
 		{
-			return new Mapping( _newText, _oldText ) ;
+			return new Mapping(_newText, _oldText);
 		}
 	}
 }
